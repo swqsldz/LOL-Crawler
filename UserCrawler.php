@@ -14,4 +14,25 @@ use simple_html_dom;
 class UserCrawler
 {
 
+    public function search($name, $serverName = ''){
+        $searchUrl = "http://www.laoyuegou.com/enter/search/search.html?type=lol&name=" . urlencode($name);
+
+        $handle = curl_init($searchUrl);
+        curl_setopt($handle, CURLOPT_RETURNTRANSFER, 1);
+        $page = curl_exec($handle);
+
+        $html = new simple_html_dom();
+        $html->load($page);
+        $count = trim($html->find('.search-result-box', 0)->children(0)->children(1)->innertext);
+
+        $doms = $html->find('.search-result-list', 0)->children(0);
+        $html->load($doms->innertext);
+        $servers = [];
+        while($count--){
+            $server = $html->find('p', $count - 1);
+            $url = $html->find('a', $count - 1);
+            $servers[explode(' - ', $server->innertext)[0]] = $url->href;
+        }
+        return $serverName == '' ? $servers : $servers[$serverName];
+    }
 }
