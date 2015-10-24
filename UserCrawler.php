@@ -13,58 +13,73 @@ use simple_html_dom;
  */
 class UserCrawler
 {
+    private $handle;
 
-    public function search($name, $serverName = ''){
+    private $html;
+
+    public function __construct()
+    {
+        $this->handle = curl_init();
+        $this->html = new simple_html_dom();
+    }
+
+
+    public function search($name, $serverName = '')
+    {
         $searchUrl = "http://www.laoyuegou.com/enter/search/search.html?type=lol&name=" . urlencode($name);
 
-        $handle = curl_init($searchUrl);
-        curl_setopt($handle, CURLOPT_RETURNTRANSFER, 1);
-        $page = curl_exec($handle);
+        curl_setopt($this->handle, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($this->handle, CURLOPT_URL, $searchUrl);
+        $page = curl_exec($this->handle);
 
-        $html = new simple_html_dom();
-        $html->load($page);
-        $count = trim($html->find('.search-result-box', 0)->children(0)->children(1)->innertext);
+        $this->html->load($page);
+        $count = trim($this->html->find('.search-result-box', 0)->children(0)->children(1)->innertext);
 
-        $doms = $html->find('.search-result-list', 0)->children(0);
-        $html->load($doms->innertext);
+        $doms = $this->html->find('.search-result-list', 0)->children(0);
+        $this->html->load($doms->innertext);
         $servers = [];
-        while($count--){
-            $server = $html->find('p', $count - 1);
-            $url = $html->find('a', $count - 1);
+        while ($count--) {
+            $server = $this->html->find('p', $count - 1);
+            $url = $this->html->find('a', $count - 1);
             $servers[explode(' - ', $server->innertext)[0]] = $url->href;
         }
         return $serverName == '' ? $servers : $servers[$serverName];
     }
 
-    public function baseInfo($name, $serverName){
+    public function baseInfo($name, $serverName)
+    {
         $userInfo = [];
-        $keys = ['场次','胜率'];
+        $keys = ['场次', '胜率'];
         $url = $this->search($name, $serverName);
 
-        $handle = curl_init($url);
-        curl_setopt($handle, CURLOPT_RETURNTRANSFER, 1);
-        curl_exec($handle);
+        curl_setopt($this->handle, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($this->handle, CURLOPT_URL, $url);
+        curl_exec($this->handle);
 
-        $info = curl_getinfo($handle);
+        $info = curl_getinfo($this->handle);
         $url = $info['redirect_url'];
 
-        curl_setopt($handle, CURLOPT_URL, $url);
-        $page = curl_exec($handle);
+        curl_setopt($this->handle, CURLOPT_URL, $url);
+        $page = curl_exec($this->handle);
 
-        $html = new simple_html_dom();
-        $html->load($page);
+        $this->html->load($page);
 
-        $userInfo['rank'] = $html->find('.info-attention span', 0)->plaintext;
-        $s5 = preg_split('/\s+/',trim($html->find('.location-list', 0)->children(0)->children(1)->children(1)->plaintext));
+        $userInfo['rank'] = $this->html->find('.info-attention span', 0)->plaintext;
+        $s5 = preg_split('/\s+/', trim($this->html->find('.location-list', 0)->children(0)->children(1)->children(1)->plaintext));
         array_pop($s5);
         $userInfo['complex']['S5排位赛'] = array_combine($keys, $s5);
-        $userInfo['complex']['S4排位赛']['场次'] = $html->find('.various-tips', 0)->plaintext;
-        $userInfo['complex']['S4排位赛']['胜率'] = $html->find('.various-tips', 1)->plaintext;
-        $userInfo['complex']['匹配赛']['场次'] = $html->find('.various-tips', 2)->plaintext;
-        $userInfo['complex']['匹配赛']['胜率'] = $html->find('.various-tips', 3)->plaintext;
-        $userInfo['complex']['大乱斗']['场次'] = $html->find('.various-tips', 4)->plaintext;
-        $userInfo['complex']['大乱斗']['胜率'] = $html->find('.various-tips', 5)->plaintext;
+        $userInfo['complex']['S4排位赛']['场次'] = $this->html->find('.various-tips', 0)->plaintext;
+        $userInfo['complex']['S4排位赛']['胜率'] = $this->html->find('.various-tips', 1)->plaintext;
+        $userInfo['complex']['匹配赛']['场次'] = $this->html->find('.various-tips', 2)->plaintext;
+        $userInfo['complex']['匹配赛']['胜率'] = $this->html->find('.various-tips', 3)->plaintext;
+        $userInfo['complex']['大乱斗']['场次'] = $this->html->find('.various-tips', 4)->plaintext;
+        $userInfo['complex']['大乱斗']['胜率'] = $this->html->find('.various-tips', 5)->plaintext;
 
         return $userInfo;
+    }
+
+    public function battles($playerName, $serverName)
+    {
+        
     }
 }
