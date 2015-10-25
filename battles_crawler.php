@@ -14,4 +14,4 @@ $playerName = iconv('GBK', 'utf-8', trim($argv[2]));
 $limit = trim($argv[3]);
 $offset = trim($argv[4]);
 
-print_r($crawler->battles($playerName, $serverName));
+print_r($crawler->battles($playerName, $serverName, $limit, $offset));
