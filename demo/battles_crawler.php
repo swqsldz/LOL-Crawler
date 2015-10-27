@@ -1,5 +1,7 @@
 <?php
-require_once 'UserCrawler.php';
+//调用格式  php battles_crawler.php 大区名 用户名 limit offset
+
+require_once '../Crawler/UserCrawler.php';
 use Crawler\UserCrawler;
 
 if($argc <= 4){
